@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今晚吃什么？</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        @media (max-width: 420px) {
+            .app-container {
+                max-width: 100%;
+                border-radius: 0;
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tab-bar {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .page {
+            padding: 20px;
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-btn:hover:not(.active) {
+            border-color: #667eea;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .result-card.shaking {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-2deg); }
+            75% { transform: translateX(10px) rotate(2deg); }
+        }
+
+        .result-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-category {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .main-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .main-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .history-section {
+            margin-top: 25px;
+        }
+
+        .history-title {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-item {
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .add-btn {
+            padding: 14px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.3s;
+        }
+
+        .add-btn:hover {
+            background: #5568d3;
+        }
+
+        .quick-add {
+            margin-bottom: 20px;
+        }
+
+        .quick-add h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .quick-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .quick-tag {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-tag:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .food-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .food-item:hover {
+            background: #f0f0f0;
+        }
+
+        .food-name {
+            font-size: 16px;
+        }
+
+        .food-category {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity 0.2s;
+        }
+
+        .delete-btn:hover {
+            opacity: 0.8;
+        }
+
+        .clear-all {
+            width: 100%;
+            padding: 12px;
+            background: transparent;
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .clear-all:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            margin-top: 10px;
+        }
+
+        .share-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .share-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .share-modal.active {
+            display: flex;
+        }
+
+        .share-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .share-url {
+            width: 100%;
+            padding: 12px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .copy-btn {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>🍽️ 今晚吃什么？</h1>
+            <p>让命运帮你决定吧！</p>
+        </div>
+
+        <div class="tab-bar">
+            <div class="tab active" onclick="switchTab('random')">🎲 随机一下</div>
+            <div class="tab" onclick="switchTab('favorites')">🧡 我的菜单</div>
+        </div>
+
+        <div id="random-page" class="page active">
+            <div class="filter-bar" id="filter-bar">
+                <div class="filter-btn active" data-category="all">全部</div>
+                <div class="filter-btn" data-category="中餐">中餐</div>
+                <div class="filter-btn" data-category="火锅">火锅</div>
+                <div class="filter-btn" data-category="日料">日料</div>
+                <div class="filter-btn" data-category="西餐">西餐</div>
+                <div class="filter-btn" data-category="烧烤">烧烤</div>
+                <div class="filter-btn" data-category="外卖">外卖</div>
+                <div class="filter-btn" data-category="小吃">小吃</div>
+            </div>
+
+            <div class="result-card" id="result-card">
+                <div class="result-title" id="result-text">点击下方按钮</div>
+                <div class="result-category" id="result-category">开始你的美食之旅</div>
+            </div>
+
+            <button class="main-btn" onclick="pickRandom()">🎲 帮我决定！</button>
+
+            <div class="action-bar" id="action-bar" style="display: none;">
+                <button class="action-btn" onclick="addToFavorites()">❤️ 收藏</button>
+                <button class="action-btn" onclick="pickRandom()">🔄 换一个</button>
+            </div>
+
+            <div class="history-section" id="history-section" style="display: none;">
+                <div class="history-title">📜 今天纠结过的：</div>
+                <div class="history-list" id="history-list"></div>
+            </div>
+        </div>
+
+        <div id="favorites-page" class="page">
+            <div class="input-group">
+                <input type="text" id="food-input" placeholder="添加你爱吃的菜/餐厅..." onkeypress="if(event.key==='Enter')addFood()">
+                <button class="add-btn" onclick="addFood()">添加</button>
+            </div>
+
+            <div class="quick-add">
+                <h3>🔥 热门推荐（点击添加）</h3>
+                <div class="quick-tags" id="quick-tags"></div>
+            </div>
+
+            <div class="food-list" id="food-list">
+                <div class="empty-state">
+                    <div style="font-size: 48px;">🍽️</div>
+                    <p>还没有收藏的菜品哦~<br>快添加你喜欢的吧！</p>
+                </div>
+            </div>
+
+            <button class="clear-all" onclick="clearAll()" style="display: none;" id="clear-all">🗑️ 清空所有</button>
+        </div>
+    </div>
+
+    <button class="share-btn" onclick="openShareModal()">🔗</button>
+
+    <div class="share-modal" id="share-modal" onclick="closeShareModal(event)">
+        <div class="share-content">
+            <h2>分享给朋友</h2>
+            <p style="margin-top: 10px; color: #666; font-size: 14px;">复制链接，让朋友们也来纠结吃什么~</p>
+            <input type="text" class="share-url" id="share-url" readonly>
+            <button class="copy-btn" onclick="copyUrl()">复制链接</button>
+        </div>
+    </div>
+
+    <script>
+        const defaultMenu = [
+            { name: '麻辣烫', category: '小吃' },
+            { name: '黄焖鸡米饭', category: '中餐' },
+            { name: '火锅', category: '火锅' },
+            { name: '烧烤', category: '烧烤' },
+            { name: '日式寿司', category: '日料' },
+            { name: '兰州拉面', category: '中餐' },
+            { name: '烤鱼', category: '中餐' },
+            { name: '披萨', category: '西餐' },
+            { name: '汉堡', category: '西餐' },
+            { name: '炸鸡', category: '小吃' },
+            { name: '盖浇饭', category: '中餐' },
+            { name: '米线', category: '中餐' },
+            { name: '烤肉', category: '烧烤' },
+            { name: '麻辣香锅', category: '中餐' },
+            { name: '小笼包', category: '中餐' },
+            { name: '牛排', category: '西餐' },
+            { name: '意面', category: '西餐' },
+            { name: '刺身', category: '日料' },
+            { name: '拉面', category: '日料' },
+            { name: '炸酱面', category: '中餐' }
+        ];
+
+        const quickAddFoods = [
+            '火锅', '烧烤', '麻辣烫', '奶茶', '寿司', 
+            '烤鱼', '小龙虾', '烤串', '炸鸡', '披萨'
+        ];
+
+        let favorites = JSON.parse(localStorage.getItem('foodFavorites') || '[]');
+        let currentFilter = 'all';
+        let currentResult = null;
+        let history = [];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+            document.getElementById(`${tab}-page`).classList.add('active');
+            
+            if (tab === 'favorites') {
+                renderFavorites();
+            }
+        }
+
+        function pickRandom() {
+            const allMenu = [...defaultMenu, ...favorites];
+            const filtered = currentFilter === 'all' 
+                ? allMenu 
+                : allMenu.filter(f => f.category === currentFilter);
+            
+            if (filtered.length === 0) {
+                alert('该分类下暂无菜品，请换个分类或添加更多收藏！');
+                return;
+            }
+
+            const card = document.getElementById('result-card');
+            card.classList.add('shaking');
+
+            setTimeout(() => {
+                card.classList.remove('shaking');
+                const random = filtered[Math.floor(Math.random() * filtered.length)];
+                currentResult = random;
+                
+                document.getElementById('result-text').textContent = random.name;
+                document.getElementById('result-category').textContent = random.category;
+                document.getElementById('action-bar').style.display = 'flex';
+                
+                addToHistory(random);
+            }, 500);
+        }
+
+        function addToHistory(food) {
+            const today = new Date().toDateString();
+            history = history.filter(h => h.date !== today);
+            history = [{ ...food, date: today }, ...history].slice(0, 10);
+            
+            renderHistory();
+            document.getElementById('history-section').style.display = 'block';
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = history.map(h => 
+                `<div class="history-item" onclick="pickHistory('${h.name}')">${h.name}</div>`
+            ).join('');
+        }
+
+        function pickHistory(name) {
+            const allMenu = [...defaultMenu, ...favorites];
+            const food = allMenu.find(f => f.name === name);
+            if (food) {
+                currentResult = food;
+                document.getElementById('result-text').textContent = food.name;
+                document.getElementById('result-category').textContent = food.category;
+                document.getElementById('action-bar').style.display = 'flex';
+            }
+        }
+
+        function addToFavorites() {
+            if (!currentResult) return;
+            
+            if (favorites.some(f => f.name === currentResult.name)) {
+                alert('已经在收藏夹里啦~');
+                return;
+            }
+            
+            favorites.push(currentResult);
+            localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+            alert('已收藏到「我的菜单」！');
+        }
+
+        function addFood() {
+            const input = document.getElementById('food-input');
+            const name = input.value.trim();
+            
+            if (!name) return;
+            
+            if (favorites.some(f => f.name === name)) {
+                alert('已经有了哦~');
+                return;
+            }
+            
+            favorites.push({ name, category: '自定义' });
+            localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+            input.value = '';
+            renderFavorites();
+        }
+
+        function quickAdd(name) {
+            if (favorites.some(f => f.name === name)) {
+                alert('已经有了哦~');
+                return;
+            }
+            
+            const category = getCategory(name);
+            favorites.push({ name, category });
+            localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+            renderFavorites();
+        }
+
+        function getCategory(name) {
+            if (['火锅', '麻辣烫', '麻辣香锅'].includes(name)) return '火锅';
+            if (['烧烤', '烤串', '烤肉', '炸鸡'].includes(name)) return '烧烤';
+            if (['寿司', '刺身', '拉面'].includes(name)) return '日料';
+            if (['披萨', '汉堡', '牛排', '意面'].includes(name)) return '西餐';
+            if (['奶茶', '炸鸡', '烤串'].includes(name)) return '小吃';
+            return '中餐';
+        }
+
+        function deleteFood(index) {
+            favorites.splice(index, 1);
+            localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+            renderFavorites();
+        }
+
+        function clearAll() {
+            if (confirm('确定清空所有收藏吗？')) {
+                favorites = [];
+                localStorage.setItem('foodFavorites', JSON.stringify(favorites));
+                renderFavorites();
+            }
+        }
+
+        function renderFavorites() {
+            const list = document.getElementById('food-list');
+            const clearBtn = document.getElementById('clear-all');
+            
+            if (favorites.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px;">🍽️</div>
+                        <p>还没有收藏的菜品哦~<br>快添加你喜欢的吧！</p>
+                    </div>
+                `;
+                clearBtn.style.display = 'none';
+            } else {
+                list.innerHTML = favorites.map((f, i) => `
+                    <div class="food-item">
+                        <div>
+                            <div class="food-name">${f.name}</div>
+                            <div class="food-category">${f.category}</div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteFood(${i})">删除</button>
+                    </div>
+                `).join('');
+                clearBtn.style.display = 'block';
+            }
+        }
+
+        function renderQuickTags() {
+            const tags = document.getElementById('quick-tags');
+            tags.innerHTML = quickAddFoods.map(f => 
+                `<div class="quick-tag" onclick="quickAdd('${f}')">${f}</div>`
+            ).join('');
+        }
+
+        function openShareModal() {
+            const url = window.location.href;
+            document.getElementById('share-url').value = url;
+            document.getElementById('share-modal').classList.add('active');
+        }
+
+        function closeShareModal(event) {
+            if (event.target.id === 'share-modal') {
+                document.getElementById('share-modal').classList.remove('active');
+            }
+        }
+
+        function copyUrl() {
+            const urlInput = document.getElementById('share-url');
+            urlInput.select();
+            document.execCommand('copy');
+            alert('链接已复制！快分享给朋友吧~');
+            document.getElementById('share-modal').classList.remove('active');
+        }
+
+        document.getElementById('filter-bar').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.dataset.category;
+            }
+        });
+
+        renderQuickTags();
+    </script>
+</body>
+</html>
